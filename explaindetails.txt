@@ -1,0 +1,182 @@
+Alright! Let’s break this code down step by step in a way that even a complete beginner (or a toddler) can understand.
+
+What does this code do?
+
+This program creates a cute AI animation (called Mochi AI) that reacts when it sees a human face.
+	•	It animates GIF images based on moods (like happy, idle, etc.).
+	•	It uses the webcam to detect a human face.
+	•	If it sees a face, it plays a “happy” animation.
+	•	If no face is detected, it plays an “idle” animation.
+
+Breaking Down the Code
+
+We’ll go part by part.
+
+1️⃣ Importing Required Libraries
+
+import tkinter as tk
+from PIL import Image, ImageTk, ImageSequence
+import cv2
+import mediapipe as mp
+import threading
+
+What’s happening here?
+	•	tkinter: Used to create the GUI (Graphical User Interface).
+	•	PIL (Pillow): Handles images, including GIF animations.
+	•	cv2 (OpenCV): Used to access the webcam and process images.
+	•	mediapipe: Helps with face detection.
+	•	threading: Runs the face detection in the background (so it doesn’t freeze the interface).
+
+2️⃣ Creating the Window
+
+root = tk.Tk()  # Create the main window
+root.title("Mochi AI")  # Set the window title
+root.geometry("400x400")  # Set window size
+
+What’s happening here?
+	•	tk.Tk(): This creates the main application window.
+	•	.title("Mochi AI"): Names the window.
+	•	.geometry("400x400"): Sets the window size to 400x400 pixels.
+
+3️⃣ Loading GIF Animations
+
+def load_gif_frames(file_path):
+    """Load GIF frames after Tkinter root is initialized."""
+    gif = Image.open(file_path)  # Open the GIF
+    return [ImageTk.PhotoImage(frame.copy()) for frame in ImageSequence.Iterator(gif)]
+
+What’s happening here?
+	•	Opens a GIF file.
+	•	Splits it into individual frames (so we can animate it).
+	•	Converts each frame into a format that Tkinter can display.
+
+4️⃣ Preloading GIFs
+
+gifs = {
+    "happy": load_gif_frames("happy.gif"),
+    "smile": load_gif_frames("smile.gif"),
+    "resting": load_gif_frames("resting.gif"),
+    "idle": load_gif_frames("idle.gif"),
+    "leaving": load_gif_frames("leaving.gif"),
+}
+
+What’s happening here?
+	•	We load multiple GIFs into a dictionary.
+	•	Each GIF represents a different mood (like happy, idle, etc.).
+
+5️⃣ Creating a Label to Show the GIF
+
+gif_label = tk.Label(root)  # Create a label (a blank space for GIFs)
+gif_label.pack()  # Show it in the window
+
+What’s happening here?
+	•	tk.Label(root): This is a blank space where we will show our GIF.
+	•	.pack(): Makes sure it appears on the screen.
+
+6️⃣ Animating the GIF
+
+current_mood = "idle"
+frame_index = 0
+
+def animate():
+    """Loop through frames of the current GIF."""
+    global frame_index
+    frame_index = (frame_index + 1) % len(gifs[current_mood])  # Go to the next frame
+    gif_label.config(image=gifs[current_mood][frame_index])  # Update the label with the new frame
+    root.after(100, animate)  # Repeat every 100 milliseconds
+
+What’s happening here?
+	•	It cycles through the frames of the current GIF.
+	•	Every 100 milliseconds, it shows the next frame.
+	•	This creates the animation effect.
+
+7️⃣ Updating the GIF Based on Mood
+
+def update_gif(mood):
+    global current_mood, frame_index
+    if mood != current_mood:
+        current_mood = mood
+        frame_index = 0  # Reset to the first frame
+
+What’s happening here?
+	•	If the mood changes, it updates the GIF.
+	•	Example: If a face is detected → Switch to “happy” GIF.
+	•	If no face → Switch to “idle” GIF.
+
+8️⃣ Start Animation
+
+animate()
+
+What’s happening here?
+	•	Starts the animation loop.
+	•	The GIF will keep playing forever.
+
+9️⃣ Setting Up Face Detection
+
+mp_face_detection = mp.solutions.face_detection
+face_detection = mp_face_detection.FaceDetection(min_detection_confidence=0.5)
+cap = cv2.VideoCapture(0)
+
+What’s happening here?
+	•	mp_face_detection: Loads MediaPipe’s face detection tool.
+	•	.FaceDetection(min_detection_confidence=0.5): Sets up face detection (50% confidence needed).
+	•	cv2.VideoCapture(0): Opens the webcam (camera 0 is the default camera).
+
+🔟 Detecting a Face
+
+def detect_face():
+    global current_mood
+    while True:
+        ret, frame = cap.read()  # Capture a frame from the webcam
+        if not ret:
+            break
+
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert to RGB
+        results = face_detection.process(rgb_frame)  # Detect faces
+
+        if results.detections:
+            update_gif("happy")  # If a face is detected, switch to "happy" GIF
+        else:
+            update_gif("idle")  # If no face is detected, switch to "idle" GIF
+
+        cv2.imshow("Face Detection", frame)  # Show the webcam feed
+        if cv2.waitKey(1) & 0xFF == ord('q'):  # Quit when 'q' is pressed
+            break
+
+    cap.release()  # Close the webcam
+    cv2.destroyAllWindows()  # Close the window
+
+What’s happening here?
+	•	Captures video from the webcam.
+	•	Converts the frame to RGB (since OpenCV uses BGR, but MediaPipe needs RGB).
+	•	Checks for a face.
+	•	If a face is found, switch GIF to “happy”.
+	•	If no face, switch GIF to “idle”.
+	•	Displays the live video.
+	•	Closes everything when the user presses ‘q’.
+
+🔟 Running Face Detection in the Background
+
+threading.Thread(target=detect_face, daemon=True).start()
+
+What’s happening here?
+	•	Starts detect_face() in a background thread.
+	•	This prevents freezing (so the GUI still works while detecting faces).
+
+🔟 Running the Main GUI
+
+root.mainloop()
+
+What’s happening here?
+	•	Starts the Tkinter event loop.
+	•	The program keeps running until the user closes it.
+
+Summary of How It Works
+	1.	Loads animations (GIFs) before starting.
+	2.	Starts animating an “idle” GIF.
+	3.	Opens the webcam and detects faces.
+	4.	If a face is detected, it plays the “happy” GIF.
+	5.	If no face is detected, it switches back to the “idle” GIF.
+	6.	Runs continuously until the user closes the app.
+
+
