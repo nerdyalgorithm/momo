@@ -84,9 +84,3 @@ threading.Thread(target=detect_face, daemon=True).start()
 root.mainloop()
 
     
-    #The code above is a simple example of a virtual assistant that changes its mood based on whether a face is detected or not. The assistant can display different GIFs depending on the user's interaction. 
-    #The program uses the  mediapipe  library for face detection and the  OpenCV  library for capturing video frames. The assistant displays different GIFs based on the presence of a face in the video stream. 
-    #The program creates a simple GUI using the  tkinter  library to display the GIFs. It loads the GIFs as a list of frames and uses a label to display the frames in a loop. 
-    ##The program also uses threading to run the face detection process in the background, allowing the GUI to update the GIFs based on the face detection results. 
-    #To run the program, you need to have the required libraries installed. You can install them using the following commands: 
-    #pip install mediapipe
